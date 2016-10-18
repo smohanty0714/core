@@ -91,6 +91,7 @@ public class Contentlet implements Serializable, Permissionable, Categorizable, 
         return getInode();
     }
 
+    //TODO : need to make the internal Content Map an Immutable Map
     public Contentlet(Map<String, Object> map) {
         this.map = map;
     }
@@ -466,7 +467,7 @@ public class Contentlet implements Serializable, Permissionable, Categorizable, 
     /**
      * Sets the sort_order.
      *
-     * @param sort_order The sort_order to set
+     * @param sortOrder The sort_order to set
      */
     public void setSortOrder(long sortOrder) {
         map.put(SORT_ORDER_KEY, sortOrder);
