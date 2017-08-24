@@ -132,6 +132,7 @@ public abstract class GenericBundleActivator implements BundleActivator {
         if(isInitialized){
             return;
         }
+        isInitialized = true;
         this.context = context;
 
         forceHttpServiceLoading( context );
@@ -146,7 +147,7 @@ public abstract class GenericBundleActivator implements BundleActivator {
         
         overrideClasses(context);
         
-        isInitialized = true;
+        
     }
 
     @Deprecated
@@ -357,15 +358,27 @@ public abstract class GenericBundleActivator implements BundleActivator {
 
         //Search for the class we want to inject using the felix plugin class loader
         Class clazz = Class.forName( className.trim(), false, getFelixClassLoader() );
+        addClassTodotCMSClassLoader(clazz);
+        
+    }
+    
+    /**
+     * Will inject this bundle context code inside the dotCMS context
+     *
+     * @param className a reference class inside this bundle jar
+     * @throws Exception
+     */
+    protected void addClassTodotCMSClassLoader ( Class clazz ) throws Exception {
+
+
 
         ByteBuddyAgent.install();
         new ByteBuddy()
                 .rebase(clazz, ClassFileLocator.ForClassLoader.of(getFelixClassLoader()))
-                .name(className.trim())
+                .name(clazz.getName())
                 .make()
                 .load(getContextClassLoader(),ClassReloadingStrategy.fromInstalledAgent());
     }
-
     //*******************************************************************
     //*******************************************************************
     //****************REGISTER SERVICES METHODS**************************
