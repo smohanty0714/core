@@ -1,19 +1,45 @@
 package com.dotmarketing.osgi;
 
+import static com.dotmarketing.osgi.ActivatorUtil.PATH_SEPARATOR;
+import static com.dotmarketing.osgi.ActivatorUtil.cleanResources;
+import static com.dotmarketing.osgi.ActivatorUtil.getBundleFolder;
+import static com.dotmarketing.osgi.ActivatorUtil.getManifestHeaderValue;
+import static com.dotmarketing.osgi.ActivatorUtil.getModuleConfig;
+import static com.dotmarketing.osgi.ActivatorUtil.moveResources;
+import static com.dotmarketing.osgi.ActivatorUtil.moveVelocityResources;
+import static com.dotmarketing.osgi.ActivatorUtil.unfreeze;
+import static com.dotmarketing.osgi.ActivatorUtil.unregisterAll;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.felix.http.proxy.DispatcherTracker;
+import org.apache.velocity.tools.view.PrimitiveToolboxManager;
+import org.apache.velocity.tools.view.ToolInfo;
+import org.apache.velocity.tools.view.servlet.ServletToolboxManager;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.quartz.SchedulerException;
+
 import com.dotcms.enterprise.cache.provider.CacheProviderAPI;
 import com.dotcms.enterprise.rules.RulesAPI;
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.agent.ByteBuddyAgent;
-import net.bytebuddy.dynamic.ClassFileLocator;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.dynamic.loading.ClassReloadingStrategy;
-import org.apache.felix.http.proxy.DispatcherTracker;
 import com.dotcms.repackage.org.apache.struts.action.ActionForward;
 import com.dotcms.repackage.org.apache.struts.action.ActionMapping;
 import com.dotcms.repackage.org.apache.struts.config.ActionConfig;
 import com.dotcms.repackage.org.apache.struts.config.ForwardConfig;
 import com.dotcms.repackage.org.apache.struts.config.ModuleConfig;
-import org.osgi.framework.*;
 import com.dotcms.repackage.org.tuckey.web.filters.urlrewrite.NormalRule;
 import com.dotcms.repackage.org.tuckey.web.filters.urlrewrite.Rule;
 import com.dotmarketing.business.APILocator;
@@ -48,33 +74,10 @@ import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.Http;
 import com.liferay.util.SimpleCachePool;
 
-import org.apache.velocity.tools.view.PrimitiveToolboxManager;
-import org.apache.velocity.tools.view.ToolInfo;
-import org.apache.velocity.tools.view.servlet.ServletToolboxManager;
-import org.quartz.SchedulerException;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-
-import static com.dotmarketing.osgi.ActivatorUtil.PATH_SEPARATOR;
-import static com.dotmarketing.osgi.ActivatorUtil.cleanResources;
-import static com.dotmarketing.osgi.ActivatorUtil.getBundleFolder;
-import static com.dotmarketing.osgi.ActivatorUtil.getManifestHeaderValue;
-import static com.dotmarketing.osgi.ActivatorUtil.getModuleConfig;
-import static com.dotmarketing.osgi.ActivatorUtil.moveResources;
-import static com.dotmarketing.osgi.ActivatorUtil.moveVelocityResources;
-import static com.dotmarketing.osgi.ActivatorUtil.unfreeze;
-import static com.dotmarketing.osgi.ActivatorUtil.unregisterAll;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.agent.ByteBuddyAgent;
+import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.dynamic.loading.ClassReloadingStrategy;
 
 /**
  * Created by Jonathan Gamba
@@ -107,6 +110,11 @@ public abstract class GenericBundleActivator implements BundleActivator {
     private Collection<String> preHooks;
     private Collection<String> postHooks;
 
+    
+    private boolean isInitialized = false;
+    
+    
+    
     private ClassLoader getFelixClassLoader () {
         return this.getClass().getClassLoader();
     }
@@ -121,7 +129,9 @@ public abstract class GenericBundleActivator implements BundleActivator {
      * @param context
      */
     protected void initializeServices ( BundleContext context ) throws Exception {
-
+        if(isInitialized){
+            return;
+        }
         this.context = context;
 
         forceHttpServiceLoading( context );
@@ -133,6 +143,21 @@ public abstract class GenericBundleActivator implements BundleActivator {
         forceRuleConditionletServiceLoading(context);
         //Forcing the loading of the CacheOSGIService
         forceCacheProviderServiceLoading(context);
+        
+        overrideClasses(context);
+        
+        isInitialized = true;
+    }
+
+    @Deprecated
+    /**
+     * {link overrideClasses}
+     * @param context
+     * @throws Exception
+     */
+    protected void publishBundleServices ( BundleContext context ) throws Exception {
+        overrideClasses(context);
+
     }
 
     /**
@@ -141,11 +166,8 @@ public abstract class GenericBundleActivator implements BundleActivator {
      * @param context
      * @throws Exception
      */
-    protected void publishBundleServices ( BundleContext context ) throws Exception {
-
-        if ( this.context == null ) {
-            this.context = context;
-        }
+    protected void overrideClasses ( BundleContext context ) throws Exception {
+        
 
         //Force the loading of some classes that may be already loaded on the host classpath but we want to override with the ones on this bundle
         String overrideClasses = getManifestHeaderValue( context, MANIFEST_HEADER_OVERRIDE_CLASSES );
@@ -163,6 +185,9 @@ public abstract class GenericBundleActivator implements BundleActivator {
 
     }
 
+    
+    
+    
     /**
      * Is possible on certain scenarios to have our ToolManager without initialization, or most probably a ToolManager without
      * set our required services, so we need to force things a little bit here, and register those services if it is necessary.
@@ -355,7 +380,7 @@ public abstract class GenericBundleActivator implements BundleActivator {
      */
     @SuppressWarnings ("unchecked")
     protected Collection<Portlet> registerPortlets ( BundleContext context, String[] xmls ) throws Exception {
-
+        initializeServices(context);
         String[] confFiles = new String[]{Http.URLtoString( context.getBundle().getResource( xmls[0] ) ),
                 Http.URLtoString( context.getBundle().getResource( xmls[1] ) )};
 
@@ -408,7 +433,7 @@ public abstract class GenericBundleActivator implements BundleActivator {
      * @throws Exception
      */
     protected ForwardConfig registerActionForward ( BundleContext context, ActionMapping actionMapping, String name, String path, Boolean redirect ) throws Exception {
-
+        initializeServices(context);
         if ( !path.startsWith( PATH_SEPARATOR ) ) {
             path = PATH_SEPARATOR + path;
         }
@@ -435,7 +460,7 @@ public abstract class GenericBundleActivator implements BundleActivator {
      * @throws Exception
      */
     protected void registerActionMapping ( ActionMapping actionMapping ) throws Exception {
-
+        initializeServices(context);
         if ( actions == null ) {
             actions = new ArrayList<ActionConfig>();
         }
@@ -463,8 +488,8 @@ public abstract class GenericBundleActivator implements BundleActivator {
      * @param scheduledTask
      * @throws Exception
      */
-    protected void scheduleQuartzJob ( ScheduledTask scheduledTask ) throws Exception {
-
+    protected void scheduleQuartzJob ( BundleContext context, ScheduledTask scheduledTask ) throws Exception {
+        initializeServices(context);
         String jobName = scheduledTask.getJobName();
         String jobGroup = scheduledTask.getJobGroup();
 
@@ -555,10 +580,11 @@ public abstract class GenericBundleActivator implements BundleActivator {
      *
      * @param context
      * @param actionlet
+     * @throws Exception 
      */
     @SuppressWarnings ("unchecked")
-    protected void registerActionlet ( BundleContext context, WorkFlowActionlet actionlet ) {
-
+    protected void registerActionlet ( BundleContext context, WorkFlowActionlet actionlet ) throws Exception {
+        initializeServices(context);
         //Getting the service to register our Actionlet
         ServiceReference serviceRefSelected = context.getServiceReference( WorkflowAPIOsgiService.class.getName() );
         if ( serviceRefSelected == null ) {
@@ -578,10 +604,11 @@ public abstract class GenericBundleActivator implements BundleActivator {
 
     /**
      * Register a Rules Engine RuleActionlet service
+     * @throws Exception 
      */
     @SuppressWarnings("unchecked")
-    protected void registerRuleActionlet(BundleContext context, RuleActionlet actionlet) {
-
+    protected void registerRuleActionlet(BundleContext context, RuleActionlet actionlet) throws Exception {
+        initializeServices(context);
         //Getting the service to register our Actionlet
         ServiceReference serviceRefSelected = context.getServiceReference(RuleActionletOSGIService.class.getName());
         if(serviceRefSelected == null) {
@@ -603,10 +630,11 @@ public abstract class GenericBundleActivator implements BundleActivator {
      *
      * @param context
      * @param conditionlet
+     * @throws Exception 
      */
     @SuppressWarnings ("unchecked")
-    protected void registerRuleConditionlet ( BundleContext context, Conditionlet conditionlet) {
-
+    protected void registerRuleConditionlet ( BundleContext context, Conditionlet conditionlet) throws Exception {
+        initializeServices(context);
         //Getting the service to register our Conditionlet
         ServiceReference serviceRefSelected = context.getServiceReference( ConditionletOSGIService.class.getName() );
         if ( serviceRefSelected == null ) {
@@ -697,7 +725,7 @@ public abstract class GenericBundleActivator implements BundleActivator {
      */
     @SuppressWarnings ( "unchecked" )
     protected void registerCacheProvider ( BundleContext context, String cacheRegion, Class<CacheProvider> provider ) throws Exception {
-
+        initializeServices(context);
         //Getting the service to register our Cache provider implementation
         ServiceReference serviceRefSelected = context.getServiceReference(CacheOSGIService.class.getName());
         if ( serviceRefSelected == null ) {
@@ -720,10 +748,11 @@ public abstract class GenericBundleActivator implements BundleActivator {
      *
      * @param context
      * @param info
+     * @throws Exception 
      */
     @SuppressWarnings ("unchecked")
-    protected void registerViewToolService ( BundleContext context, ToolInfo info ) {
-
+    protected void registerViewToolService ( BundleContext context, ToolInfo info ) throws Exception {
+        initializeServices(context);
         //Getting the service to register our ViewTool
         ServiceReference serviceRefSelected = context.getServiceReference( PrimitiveToolboxManager.class.getName() );
         if ( serviceRefSelected == null ) {
@@ -818,6 +847,7 @@ public abstract class GenericBundleActivator implements BundleActivator {
             this.context = context;
         }
 
+
         //ClassLoaders
         ClassLoader felixClassLoader = getFelixClassLoader();
         ClassLoader contextClassLoader = getContextClassLoader();
@@ -840,13 +870,33 @@ public abstract class GenericBundleActivator implements BundleActivator {
                 }
 
                 for ( String classToOverride : forceOverride ) {
-                    ByteBuddyAgent.install();
-                    new ByteBuddy()
-                            .rebase(Class.forName(classToOverride.trim()), ClassFileLocator.ForClassLoader.of(contextClassLoader))
-                            .name(classToOverride.trim())
-                            .make()
-                            .load(contextClassLoader,ClassReloadingStrategy.fromInstalledAgent());
-                }
+       
+                    try{
+                        Class clazz = contextClassLoader.loadClass(classToOverride.trim());
+                        
+
+                        ByteBuddyAgent.install();
+                        new ByteBuddy()
+                                .rebase(clazz, ClassFileLocator.ForClassLoader.of(contextClassLoader))
+                                .name(classToOverride.trim())
+                                .make()
+                                .load(contextClassLoader,ClassReloadingStrategy.fromInstalledAgent());
+                        clazz = contextClassLoader.loadClass(classToOverride.trim());
+
+
+                    }
+                    catch(java.lang.IllegalStateException e){
+                        Logger.info(this.getClass(), "unable to rebase class " + classToOverride.trim() + "  does it exist in dotCMS code");
+
+
+                        
+                        
+                    }
+                    
+                    
+                    
+                    
+                }        
             }
         }
     }
