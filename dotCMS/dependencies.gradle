@@ -408,5 +408,7 @@ dependencies {
 
     compile 'net.jodah:failsafe:1.1.1'
     compile 'com.rainerhahnekamp:sneakythrow:1.1.0'
-    
+
+    compile group: 'com.github.lookfirst', name: 'sardine', version: '5.7'
+
 }

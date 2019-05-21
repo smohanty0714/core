@@ -4,7 +4,6 @@ import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.CollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.FileItem;
 import com.dotcms.repackage.com.bradmcevoy.http.FileResource;
-import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.LockInfo;
 import com.dotcms.repackage.com.bradmcevoy.http.LockResult;
 import com.dotcms.repackage.com.bradmcevoy.http.LockTimeout;
@@ -51,6 +50,7 @@ public class TempFileResourceImpl implements FileResource, LockableResource {
         this.file = file;
         this.url = url;
         this.isAutoPub = isAutoPub;
+		System.out.println(":::TempFileResourceImpl " + file.getName());
     }
 
     
@@ -148,7 +148,7 @@ public class TempFileResourceImpl implements FileResource, LockableResource {
 
 
 	public void copyTo(CollectionResource collRes, String name) {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+	    final User user = dotDavHelper.getCurrentUser();
 		if(collRes instanceof TempFolderResourceImpl){
 			TempFolderResourceImpl tr = (TempFolderResourceImpl)collRes;
 			try {
@@ -192,7 +192,7 @@ public class TempFileResourceImpl implements FileResource, LockableResource {
 
 
 	public void moveTo(CollectionResource collRes, String name) {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+	    final User user = dotDavHelper.getCurrentUser();
 		if(collRes instanceof TempFolderResourceImpl){
 			TempFolderResourceImpl tr = (TempFolderResourceImpl)collRes;
 			try {

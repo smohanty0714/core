@@ -6,7 +6,6 @@ package com.dotmarketing.webdav;
 import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.CollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.FolderResource;
-import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.LockInfo;
 import com.dotcms.repackage.com.bradmcevoy.http.LockResult;
 import com.dotcms.repackage.com.bradmcevoy.http.LockTimeout;
@@ -48,6 +47,7 @@ public class TempFolderResourceImpl implements FolderResource, LockableResource,
 		this.isAutoPub = isAutoPub;
 		this.path = path;
 		this.folder = folder;
+		System.out.println(":::TempFolderResourceImpl " + path + " " + folder  );
 	}
 	
 	/* (non-Javadoc)
@@ -190,7 +190,7 @@ public class TempFolderResourceImpl implements FolderResource, LockableResource,
 	 * @see com.dotcms.repackage.com.bradmcevoy.http.CopyableResource#copyTo(com.dotcms.repackage.com.bradmcevoy.http.CollectionResource, java.lang.String)
 	 */
 	public void copyTo(CollectionResource collRes, String name) {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		if(collRes instanceof TempFolderResourceImpl){
 			TempFolderResourceImpl tr = (TempFolderResourceImpl)collRes;
 			try {
@@ -241,7 +241,7 @@ public class TempFolderResourceImpl implements FolderResource, LockableResource,
 	 * @see com.dotcms.repackage.com.bradmcevoy.http.MoveableResource#moveTo(com.dotcms.repackage.com.bradmcevoy.http.CollectionResource, java.lang.String)
 	 */
 	public void moveTo(CollectionResource collRes, String name) {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		if(collRes instanceof TempFolderResourceImpl){
 			TempFolderResourceImpl tr = (TempFolderResourceImpl)collRes;
 			try {

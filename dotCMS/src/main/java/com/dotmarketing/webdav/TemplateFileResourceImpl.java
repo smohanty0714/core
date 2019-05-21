@@ -4,7 +4,6 @@ import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.CollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.FileItem;
 import com.dotcms.repackage.com.bradmcevoy.http.FileResource;
-import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.LockInfo;
 import com.dotcms.repackage.com.bradmcevoy.http.LockResult;
 import com.dotcms.repackage.com.bradmcevoy.http.LockTimeout;
@@ -47,6 +46,7 @@ public class TemplateFileResourceImpl implements FileResource, LockableResource 
 		this.template = t;
 		tapi = APILocator.getTemplateAPI();
 		this.host = h;
+		System.out.println(":::TemplateFileResourceImpl " + t);
 	}
 
 	public String getUniqueId() {
@@ -132,7 +132,7 @@ public class TemplateFileResourceImpl implements FileResource, LockableResource 
 	 */
 	public Resource createNew(String newName, InputStream in, Long length, String contentType) throws IOException,
 			DotRuntimeException {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 
 		StringWriter sw = new StringWriter();
 
@@ -176,7 +176,7 @@ public class TemplateFileResourceImpl implements FileResource, LockableResource 
 	}
 
 	public void delete() {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		try {
 			tapi.delete(template, user, false);
 

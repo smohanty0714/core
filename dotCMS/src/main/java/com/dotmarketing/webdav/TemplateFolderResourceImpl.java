@@ -58,6 +58,7 @@ public class TemplateFolderResourceImpl implements LockableResource,
 		this.path = path ;
 		this.host = host;
 		this.tapi = APILocator.getTemplateAPI();
+		System.out.println(":::TemplateFolderResourceImpl " + host + " " + path);
 	}
 
 	/*

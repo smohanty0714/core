@@ -4,7 +4,6 @@ import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.CollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.FileItem;
 import com.dotcms.repackage.com.bradmcevoy.http.FileResource;
-import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.LockInfo;
 import com.dotcms.repackage.com.bradmcevoy.http.LockResult;
 import com.dotcms.repackage.com.bradmcevoy.http.LockTimeout;
@@ -48,11 +47,12 @@ public class FileResourceImpl implements FileResource, LockableResource {
 		this.isAutoPub = dotDavHelper.isAutoPub(path);
 		this.path = path;
 		this.file = file;
+		System.out.println(":::FileResourceImpl "+ file.getFileName());
 
 	}
 
 	public void copyTo(CollectionResource collRes, String name) throws DotRuntimeException {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		if(collRes instanceof TempFolderResourceImpl){
 			TempFolderResourceImpl tr = (TempFolderResourceImpl)collRes;
 			try {
@@ -78,6 +78,7 @@ public class FileResourceImpl implements FileResource, LockableResource {
 	public Object authenticate(String username, String password) {
 		try {
 			return dotDavHelper.authorizePrincipal(username, password);
+
 		} catch (Exception e) {
 			Logger.error(this, e.getMessage(), e);
 			return null;
@@ -142,7 +143,7 @@ public class FileResourceImpl implements FileResource, LockableResource {
 	}
 
   public void delete() throws DotRuntimeException {
-    User user = (User) HttpManager.request().getAuthorization().getTag();
+	final User user = dotDavHelper.getCurrentUser();
     try {
       dotDavHelper.removeObject(path, user);
     } catch (Exception e) {
@@ -176,7 +177,7 @@ public class FileResourceImpl implements FileResource, LockableResource {
 	}
 
 	public void moveTo(CollectionResource collRes, String name) throws RuntimeException {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		if(!name.contains(".")){
 			// so far there are no indications of problems moving files without extension
 			// the validation remains for possible problems to help out debugging.
@@ -258,7 +259,7 @@ public class FileResourceImpl implements FileResource, LockableResource {
 	}
 
 	public Long getMaxAgeSeconds(Auth arg0) {
-		return (long)60;
+		return (long)1600;
 	}
 
 }

@@ -49,6 +49,8 @@ public class LanguageFolderResourceImpl implements FolderResource, LockingCollec
 	 * @param path
 	 */
 	public LanguageFolderResourceImpl(String path) {
+		System.out.println(":::LanguageFolderResourceImpl :" + path);
+
 		dotDavHelper = new DotWebdavHelper();
 		this.path = path;
 		if(!UtilMethods.isSet(path)){
@@ -120,16 +122,18 @@ public class LanguageFolderResourceImpl implements FolderResource, LockingCollec
 	 * @see com.dotcms.repackage.com.bradmcevoy.http.CollectionResource#getChildren()
 	 */
 	public List<? extends Resource> getChildren() {
-		File[] children = folder.listFiles();
-		List<Resource> result = new ArrayList<Resource>();
-		for (File file : children) {
-			if(file.getName().endsWith(".properties") || file.getName().endsWith(".native") || file.getName().equals("archived") || folder.getName().equals("archived")){
-				if(file.isDirectory()){
-					LanguageFolderResourceImpl tr = new LanguageFolderResourceImpl(path + File.separator + file.getName());
-					result.add(tr);
-				}else{
-					LanguageFileResourceImpl tr = new LanguageFileResourceImpl(path + File.separator + file.getName());
-					result.add(tr);
+		final File[] children = folder.listFiles();
+		final List<Resource> result = new ArrayList<>();
+		if(null != children){
+			for (File file : children) {
+				if(file.getName().endsWith(".properties") || file.getName().endsWith(".native") || file.getName().equals("archived") || folder.getName().equals("archived")){
+					if(file.isDirectory()){
+						LanguageFolderResourceImpl tr = new LanguageFolderResourceImpl(path + File.separator + file.getName());
+						result.add(tr);
+					}else{
+						LanguageFileResourceImpl tr = new LanguageFileResourceImpl(path + File.separator + file.getName());
+						result.add(tr);
+					}
 				}
 			}
 		}

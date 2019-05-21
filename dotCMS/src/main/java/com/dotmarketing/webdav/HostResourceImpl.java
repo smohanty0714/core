@@ -1,21 +1,12 @@
 package com.dotmarketing.webdav;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.CollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.FolderResource;
-import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.LockInfo;
 import com.dotcms.repackage.com.bradmcevoy.http.LockResult;
 import com.dotcms.repackage.com.bradmcevoy.http.LockTimeout;
 import com.dotcms.repackage.com.bradmcevoy.http.LockToken;
-import com.dotcms.repackage.com.bradmcevoy.http.LockableResource;
 import com.dotcms.repackage.com.bradmcevoy.http.LockingCollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.MakeCollectionableResource;
 import com.dotcms.repackage.com.bradmcevoy.http.PropFindableResource;
@@ -24,7 +15,6 @@ import com.dotcms.repackage.com.bradmcevoy.http.Request.Method;
 import com.dotcms.repackage.com.bradmcevoy.http.Resource;
 import com.dotcms.repackage.com.bradmcevoy.http.exceptions.BadRequestException;
 import com.dotcms.repackage.com.bradmcevoy.http.exceptions.ConflictException;
-import com.dotcms.repackage.com.bradmcevoy.http.exceptions.LockedException;
 import com.dotcms.repackage.com.bradmcevoy.http.exceptions.NotAuthorizedException;
 import com.dotcms.repackage.com.bradmcevoy.http.exceptions.PreConditionFailedException;
 import com.dotmarketing.beans.Host;
@@ -41,6 +31,11 @@ import com.dotmarketing.util.Config;
 import com.dotmarketing.util.InodeUtils;
 import com.dotmarketing.util.Logger;
 import com.liferay.portal.model.User;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class HostResourceImpl extends BasicFolderResourceImpl implements Resource, CollectionResource, FolderResource, PropFindableResource, MakeCollectionableResource, LockingCollectionResource{
 
@@ -49,6 +44,7 @@ public class HostResourceImpl extends BasicFolderResourceImpl implements Resourc
 	public HostResourceImpl(String path) {
 	    super(path);
 		perAPI = APILocator.getPermissionAPI();
+		System.out.println(":::HostResourceImpl " + path);
 	}
 	
 	public Object authenticate(String username, String password) {
@@ -115,11 +111,11 @@ public class HostResourceImpl extends BasicFolderResourceImpl implements Resourc
 	}
 
 	public Resource child(String childName) {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+	    final User user = dotDavHelper.getCurrentUser();
 		String uri="/"+childName;
 		
 		try {
-		    Identifier ident=APILocator.getIdentifierAPI().find(host, uri);
+		    Identifier ident = APILocator.getIdentifierAPI().find(host, uri);
 		    if(ident!=null && InodeUtils.isSet(ident.getInode())) {
 		        if(ident.getAssetType().equals("folder")) {
 		            Folder folder = APILocator.getFolderAPI().findFolderByPath(uri, host, user, false);
@@ -142,7 +138,7 @@ public class HostResourceImpl extends BasicFolderResourceImpl implements Resourc
 	} 
 
 	public List<? extends Resource> getChildren() {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+	    final User user = dotDavHelper.getCurrentUser();
 		List<Folder> folders = listFolders();
 		List<Resource> frs = new ArrayList<Resource>();
 		try {
@@ -228,7 +224,7 @@ public class HostResourceImpl extends BasicFolderResourceImpl implements Resourc
 	}
 
 	private List<Folder> listFolders(){
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+	    final User user = dotDavHelper.getCurrentUser();
 		PermissionAPI perAPI = APILocator.getPermissionAPI();
 		FolderAPI folderAPI = APILocator.getFolderAPI();
 		List<Folder> folders = new ArrayList<Folder>();
@@ -252,18 +248,18 @@ public class HostResourceImpl extends BasicFolderResourceImpl implements Resourc
 	}
 
 	public CollectionResource createCollection(String newName) throws DotRuntimeException {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		if(dotDavHelper.isTempResource(newName)){
-			File f = dotDavHelper.createTempFolder(File.separator + host.getHostname() + File.separator + newName);
-			TempFolderResourceImpl tr = new TempFolderResourceImpl(f.getPath(),f ,isAutoPub);
-			return tr;
+				File f = dotDavHelper.createTempFolder(File.separator + host.getHostname() + File.separator + newName);
+				TempFolderResourceImpl tr = new TempFolderResourceImpl(f.getPath(),f ,isAutoPub);
+				return tr;
 		}
 		if(!path.endsWith("/")){
 			path = path + "/";
 		}
 		try {
-			Folder f = dotDavHelper.createFolder(path + newName, user);
-			FolderResourceImpl fr = new FolderResourceImpl(f, path + newName + "/");
+			final Folder folder = dotDavHelper.createFolder(path + newName, user);
+			FolderResourceImpl fr = new FolderResourceImpl(folder, path + newName + "/");
 			return fr;
 		} catch (Exception e) {
 			Logger.error(this, e.getMessage(), e);

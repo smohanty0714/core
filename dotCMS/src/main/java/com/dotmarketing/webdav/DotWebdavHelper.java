@@ -4,12 +4,14 @@ import static com.dotmarketing.business.PermissionAPI.PERMISSION_CAN_ADD_CHILDRE
 import static com.dotmarketing.business.PermissionAPI.PERMISSION_READ;
 
 import com.dotcms.rendering.velocity.services.DotResourceCache;
+import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.CollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.LockInfo;
 import com.dotcms.repackage.com.bradmcevoy.http.LockResult;
 import com.dotcms.repackage.com.bradmcevoy.http.LockTimeout;
 import com.dotcms.repackage.com.bradmcevoy.http.LockToken;
+import com.dotcms.repackage.com.bradmcevoy.http.Request;
 import com.dotcms.repackage.com.bradmcevoy.http.Resource;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Identifier;
@@ -60,12 +62,18 @@ import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Timer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.apache.oro.text.regex.MalformedPatternException;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
@@ -112,7 +120,7 @@ public class DotWebdavHelper {
 		try{
 			tempResourcePattern = c.compile("/\\(.*\\)|/._\\(.*\\)|/\\.|^\\.|^\\(.*\\)",Perl5Compiler.READ_ONLY_MASK);
     	}catch (MalformedPatternException mfe) {
-    		Logger.fatal(this,"Unable to instaniate webdav servlet : " + mfe.getMessage(),mfe);
+    		Logger.fatal(this,"Unable to instantiate Webdav servlet : " + mfe.getMessage(),mfe);
 			Logger.error(this,mfe.getMessage(),mfe);
 		}
 
@@ -149,6 +157,35 @@ public class DotWebdavHelper {
 			}
 				return false;
 		}
+	}
+
+	public User getCurrentUser() {
+		User user = null;
+		final Request request = HttpManager.request();
+		if (null == request) {
+			Logger.error(DotWebdavHelper.class, "Request not available.");
+		} else {
+			final Auth auth = request.getAuthorization();
+			Logger.error(DotWebdavHelper.class, "Auth is not available.");
+			if (auth != null) {
+				user = User.class.cast(auth.getTag());
+				if(user == null){
+				   Logger.debug(this,()-> "Revalidating authorization. ");
+				   user = getCurrentUser(auth);
+				   auth.setTag(user);
+				}
+			}
+		}
+		return user;
+	}
+
+	private User getCurrentUser(final Auth auth) {
+		try {
+		 return authorizePrincipal(auth.getUser(),auth.getPassword());
+		} catch (DotSecurityException | DotDataException e) {
+			Logger.error(this, e.getMessage(), e);
+		}
+		  return null;
 	}
 
 	public User authorizePrincipal(String username, String passwd)	throws DotSecurityException, NoSuchUserException, DotDataException {
@@ -429,7 +466,7 @@ public class DotWebdavHelper {
             for ( Versionable file : filesListSubChildren ) {
                 if ( !file.isArchived() ) {
                     IFileAsset fileAsset = (IFileAsset) file;
-                    if(fileAsset.getLanguageId()==defaultLang){
+                    if(fileAsset.getLanguageId() == defaultLang){
                     	FileResourceImpl resource = new FileResourceImpl( fileAsset, prePath + folderHost.getHostname() + "/" + fileAsset.getPath() );
                     	result.add( resource );
                     }
@@ -490,12 +527,48 @@ public class DotWebdavHelper {
 		}
 	}
 
-	public boolean isTempResource(String path){
-		Perl5Matcher matcher = (Perl5Matcher) localP5Matcher.get();
-		if(matcher.contains(path, tempResourcePattern))
-			return true;
-		return false;
+	/**
+	 * Matches anything that starts with ('.' '._'  '/.' '/_')
+	 * @param path
+	 * @return
+	 */
+	boolean matchGeneralTempResource(final String path){
+		final Perl5Matcher matcher = localP5Matcher.get();
+		return (matcher.contains(path, tempResourcePattern));
 	}
+
+	/**
+	 * Matches anything of the following form (robots.txt.sb-810a7a8f-gUPc71) which is the how temp folders look like on Mac OS.
+	 * @param path
+	 * @return
+	 */
+	private boolean matchTempFolder(final String path){
+      boolean match = false;
+		final List<String> pathComponents = Arrays.stream(
+				path.split(File.separator)
+		).filter(Strings::isNotEmpty).collect(Collectors.toList());
+		final ListIterator <String> listIterator = pathComponents.listIterator(pathComponents.size());
+		while(listIterator.hasPrevious() && !match ) {
+			match = tempFolderPattern.matcher(listIterator.previous()).find();
+		}
+      return match;
+    }
+
+	private Pattern tempFolderPattern = Pattern.compile("^(\\w+)((-*)(\\w+)(-*))*(\\.{1})(\\w+)(\\.{1})(\\w+)(-*)(\\.*)(([a-zA-Z]+)(-{1})[a-zA-Z0-9]+(-{1})[a-zA-Z0-9]+)");
+
+	/**
+	 *
+	 * @param stringPath
+	 * @return
+	 */
+	boolean isTempResource(final String stringPath){
+		  boolean match = matchGeneralTempResource(stringPath);
+           if(!match){
+			   match = matchTempFolder(stringPath);
+			   System.out.println(":: temp folder is a match  ? " + BooleanUtils.toStringYesNo(match));
+           }
+		   return match;
+    }
 
 	public File createTempFolder(String path){
 		try {
@@ -739,7 +812,7 @@ public class DotWebdavHelper {
 				fileAsset.setStructureInode(folder.getDefaultFileType());
 				fileAsset.setFolder(folder.getInode());
 
-				// Create user temp folder and create file inside of it
+				// Create user temp folder and create file inside of it Dah!!
 				File fileData = createFileInTemporalFolder(fieldVar, user.getUserId(), fileName);
 
 				// Saving the new working data
@@ -966,7 +1039,7 @@ public class DotWebdavHelper {
 				Identifier identifier  = APILocator.getIdentifierAPI().find(host, getPath(fromPath));
 
 				Identifier identTo  = APILocator.getIdentifierAPI().find(host, getPath(toPath));
-				boolean destinationExists=identTo!=null && InodeUtils.isSet(identTo.getId());
+				final boolean destinationExists = identTo != null && InodeUtils.isSet(identTo.getId());
 
 				if(identifier!=null && identifier.getAssetType().equals("contentlet")){
 					Contentlet fileAssetCont = conAPI.findContentletByIdentifier(identifier.getId(), false, defaultLang, user, false);
@@ -1227,11 +1300,24 @@ public class DotWebdavHelper {
 	   return null;
 	  }
 
-	private String getFileName(String uri) {
-		int begin = uri.lastIndexOf("/") + 1;
-		int end = uri.length();
-		String fileName = uri.substring(begin, end);
-		return fileName;
+	 String getFileName(final String uri) {
+
+	    if(matchTempFolder(uri)){
+	        //robots.txt.sb-810a7a8f-gUPc71
+			final List<String> uriComponents = Arrays.stream(
+					uri.split(File.separator)
+			).filter(Strings::isNotEmpty).collect(Collectors.toList());
+			final String lastComponent = uriComponents.get(uriComponents.size()-1);
+
+            final int index = lastComponent.lastIndexOf('.');
+            return lastComponent.substring(0,index);
+	    } else
+	    {
+			final int begin = uri.lastIndexOf("/") + 1;
+			final int end = uri.length();
+			final String fileName = uri.substring(begin, end);
+			return fileName;
+		}
 	}
 
 	private String getFolderName(String uri) {

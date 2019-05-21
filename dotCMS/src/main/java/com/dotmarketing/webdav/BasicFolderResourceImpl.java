@@ -2,7 +2,6 @@ package com.dotmarketing.webdav;
 
 import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.FolderResource;
-import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.Range;
 import com.dotcms.repackage.com.bradmcevoy.http.Resource;
 import com.dotcms.repackage.com.bradmcevoy.http.exceptions.BadRequestException;
@@ -54,8 +53,8 @@ public abstract class BasicFolderResourceImpl implements FolderResource {
             // http://jira.dotmarketing.net/browse/DOTCMS-7285
     		newName = newName + ".spotlight";
     	}
-   
-        User user=(User)HttpManager.request().getAuthorization().getTag();
+
+        final User user = dotDavHelper.getCurrentUser();
         
         if(!path.endsWith("/")){
             path = path + "/";
@@ -92,7 +91,7 @@ public abstract class BasicFolderResourceImpl implements FolderResource {
 
     
     public void delete() throws DotRuntimeException{
-        User user=(User)HttpManager.request().getAuthorization().getTag();
+        final User user = dotDavHelper.getCurrentUser();
         try {
             dotDavHelper.removeObject(path, user);
         } catch (Exception e) {

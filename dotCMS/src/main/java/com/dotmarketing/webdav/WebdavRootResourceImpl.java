@@ -1,16 +1,8 @@
 package com.dotmarketing.webdav;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.CollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.GetableResource;
-import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.LockInfo;
 import com.dotcms.repackage.com.bradmcevoy.http.LockResult;
 import com.dotcms.repackage.com.bradmcevoy.http.LockTimeout;
@@ -33,6 +25,12 @@ import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.portlets.contentlet.business.HostAPI;
 import com.dotmarketing.util.Logger;
 import com.liferay.portal.model.User;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public class WebdavRootResourceImpl implements Resource, PropFindableResource, CollectionResource, LockableResource, GetableResource {
 
@@ -42,6 +40,7 @@ public class WebdavRootResourceImpl implements Resource, PropFindableResource, C
 	public WebdavRootResourceImpl(String path) {
 		dotDavHelper = new DotWebdavHelper();
 		this.path=path;
+		System.out.println(":::WebdavRootResourceImpl");
 	}
 	
 	public Object authenticate(String username, String password) {
@@ -116,7 +115,7 @@ public class WebdavRootResourceImpl implements Resource, PropFindableResource, C
 	}
 
 	public List<? extends Resource> getChildren() {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		List<Host> hosts = listHosts();
 		List<Resource> hrs = new ArrayList<Resource>();
 		for (Host host : hosts) {
@@ -138,7 +137,7 @@ public class WebdavRootResourceImpl implements Resource, PropFindableResource, C
 	}
 
 	private List<Host> listHosts(){
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		HostAPI hostAPI = APILocator.getHostAPI();
 		List<Host> hosts;
 		try {

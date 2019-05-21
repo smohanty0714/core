@@ -6,7 +6,6 @@ package com.dotmarketing.webdav;
 import com.dotcms.repackage.com.bradmcevoy.http.Auth;
 import com.dotcms.repackage.com.bradmcevoy.http.CollectionResource;
 import com.dotcms.repackage.com.bradmcevoy.http.FolderResource;
-import com.dotcms.repackage.com.bradmcevoy.http.HttpManager;
 import com.dotcms.repackage.com.bradmcevoy.http.LockInfo;
 import com.dotcms.repackage.com.bradmcevoy.http.LockResult;
 import com.dotcms.repackage.com.bradmcevoy.http.LockTimeout;
@@ -53,6 +52,7 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 		this.perAPI = APILocator.getPermissionAPI();
 		this.folder = folder;
 		this.hostAPI = APILocator.getHostAPI();
+		System.out.println(":::FolderResourceImpl " +  folder.getPath() + folder.getName());
 	}
 	
 	/* (non-Javadoc)
@@ -60,8 +60,7 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 	 */
 	public CollectionResource createCollection(String newName) throws DotRuntimeException {
 		newName = newName.toLowerCase();
-
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+	    final User user = dotDavHelper.getCurrentUser();
 		String folderPath ="";
 		if(dotDavHelper.isTempResource(newName)){
 			Host host;
@@ -88,6 +87,7 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 			path = path + "/";
 		}
 		try {
+		    System.out.println(":::Create folder "+ path + newName);
 			Folder newfolder = dotDavHelper.createFolder(path + newName, user);
 			FolderResourceImpl folderResource = new FolderResourceImpl(newfolder, path + newName + "/");
 			return folderResource;
@@ -101,7 +101,7 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 	 * @see com.dotcms.repackage.com.bradmcevoy.http.CollectionResource#child(java.lang.String)
 	 */
 	public Resource child(String childName) {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+	    final User user = dotDavHelper.getCurrentUser();
 		List<Resource> children;
 		try {
 			children = dotDavHelper.getChildrenOfFolder(folder, user, isAutoPub, lang);
@@ -139,7 +139,7 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 	 * @see com.dotcms.repackage.com.bradmcevoy.http.CollectionResource#getChildren()
 	 */
 	public List<? extends Resource> getChildren() {
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+	    final User user = dotDavHelper.getCurrentUser();
 		List<Resource> children;
 		try {
             children = dotDavHelper.getChildrenOfFolder( folder, user, isAutoPub, lang );
@@ -167,11 +167,10 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 	 */
 	public boolean authorise(Request req, Method method, Auth auth) {
 		try {
-			
 			if(auth == null)
 				return false;
 			else {
-			    User user=(User)auth.getTag();
+			    User user = (User)auth.getTag();
 			    if(method.isWrite){
     				return perAPI.doesUserHavePermission(folder, PermissionAPI.PERMISSION_CAN_ADD_CHILDREN, user, false);
     			}else if(!method.isWrite){
@@ -233,7 +232,8 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 	 * @see com.dotcms.repackage.com.bradmcevoy.http.DeletableResource#delete()
 	 */
 	public void delete() throws DotRuntimeException{
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+
+	    final User user = dotDavHelper.getCurrentUser();
 		try {
 			dotDavHelper.removeObject(path, user);
 		} catch (Exception e) {
@@ -251,7 +251,7 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 	
 	@Override
     public void copyTo(CollectionResource collRes, String name) throws NotAuthorizedException, BadRequestException,ConflictException {
-        User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
         
         if(collRes instanceof TempFolderResourceImpl){
             TempFolderResourceImpl tr = (TempFolderResourceImpl)collRes;
@@ -288,7 +288,7 @@ public class FolderResourceImpl extends BasicFolderResourceImpl implements Locka
 	 * @see com.dotcms.repackage.com.bradmcevoy.http.MoveableResource#moveTo(com.dotcms.repackage.com.bradmcevoy.http.CollectionResource, java.lang.String)
 	 */
 	public void moveTo(CollectionResource collRes, String name) throws DotRuntimeException{
-	    User user=(User)HttpManager.request().getAuthorization().getTag();
+		final User user = dotDavHelper.getCurrentUser();
 		if(collRes instanceof TempFolderResourceImpl){
 			Logger.debug(this, "Webdav clients wants to move a file from dotcms to a tempory storage but we don't allow this in fear that the tranaction may break and delete a file from dotcms");
 			TempFolderResourceImpl tr = (TempFolderResourceImpl)collRes;

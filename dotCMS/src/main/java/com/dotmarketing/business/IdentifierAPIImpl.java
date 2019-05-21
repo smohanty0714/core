@@ -156,7 +156,7 @@ public class IdentifierAPIImpl implements IdentifierAPI {
 		        return identifierFactory.createNewIdentifier(asset, (Host) parent);
 		}
 		else{
-			throw new DotStateException("You can only create an identifier on a host of folder.  Trying: " + parent);
+			throw new DotStateException("You can only create an identifier on a host or a folder.  Trying: " + parent);
 		}
 	}
 
