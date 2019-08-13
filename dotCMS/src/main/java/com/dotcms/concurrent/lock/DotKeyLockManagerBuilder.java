@@ -2,6 +2,7 @@ package com.dotcms.concurrent.lock;
 
 import com.dotcms.util.ReflectionUtils;
 import com.dotmarketing.util.Config;
+import com.google.common.annotations.VisibleForTesting;
 import com.liferay.util.StringPool;
 import java.util.concurrent.TimeUnit;
 
@@ -37,5 +38,14 @@ public class DotKeyLockManagerBuilder {
         final TimeUnit timeUnit = TimeUnit.valueOf(Config.getStringProperty(lockManagerName + DOTCMS_CONCURRENT_LOCK_STRIPES_TIMEUNIT, StripedLockImpl.DEFAULT_TU.name()));
         return new StripedLockImpl<>(stripes, time, timeUnit);
     }
+
+    @VisibleForTesting
+    public static <R> DotKeyLockManager <R> newLockManager(final String lockManagerName, final int stripes, final int time, final TimeUnit timeUnit ) {
+        if(null !=  dotKeyLockManagerFactory){
+            return dotKeyLockManagerFactory.create(lockManagerName);
+        }
+        return new StripedLockImpl<>(stripes, time, timeUnit);
+    }
 }
+
 

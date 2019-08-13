@@ -21,7 +21,7 @@ public class StripedLockImpl<K> implements DotKeyLockManager<K> {
 
     static final int DEFAULT_STRIPES = 64;
 
-    static final int DEFAULT_TIME = 3;
+    static final int DEFAULT_TIME = 15;
 
     static final TimeUnit DEFAULT_TU = TimeUnit.SECONDS;
 

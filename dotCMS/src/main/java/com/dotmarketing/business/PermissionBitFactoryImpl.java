@@ -1,7 +1,6 @@
 package com.dotmarketing.business;
 
 import static com.dotcms.content.elasticsearch.business.ESIndexAPI.INDEX_OPERATIONS_TIMEOUT_IN_MS;
-import static com.dotcms.exception.ExceptionUtil.bubbleUpException;
 
 import com.dotcms.business.CloseDBIfOpened;
 import com.dotcms.business.WrapInTransaction;
@@ -14,9 +13,7 @@ import com.dotcms.contenttype.model.type.BaseContentType;
 import com.dotcms.contenttype.model.type.ContentType;
 import com.dotcms.contenttype.transform.contenttype.StructureTransformer;
 import com.dotcms.rendering.velocity.viewtools.navigation.NavResult;
-
 import com.dotcms.system.SimpleMapAppContext;
-import com.dotcms.util.ReturnableDelegate;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.beans.Identifier;
 import com.dotmarketing.beans.Inode;
@@ -58,11 +55,8 @@ import com.dotmarketing.util.Config;
 import com.dotmarketing.util.InodeUtils;
 import com.dotmarketing.util.Logger;
 import com.dotmarketing.util.UtilMethods;
-
 import com.liferay.portal.model.User;
-
 import io.vavr.control.Try;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,7 +77,7 @@ import org.elasticsearch.action.bulk.BulkRequestBuilder;
 */
 public class PermissionBitFactoryImpl extends PermissionFactory {
 
-	private PermissionCache permissionCache;
+	PermissionCache permissionCache;
 	private static final Map<String, Integer> PERMISION_TYPES = new HashMap<String, Integer>();
 
 	private final IdentifierStripedLock lockManager = DotConcurrentFactory.getInstance().getIdentifierStripedLock();
@@ -2148,7 +2142,7 @@ public class PermissionBitFactoryImpl extends PermissionFactory {
 
   @CloseDBIfOpened
   @SuppressWarnings("unchecked")
-  private List<Permission> loadPermissions(final Permissionable permissionable) throws DotDataException {
+  List<Permission> loadPermissions(final Permissionable permissionable) throws DotDataException {
 
     final String permissionKey = Try.of(() -> permissionable.getPermissionId())
         .getOrElseThrow(() -> new DotDataException("Invalid Permissionable passed in. permissionable:" + permissionable));
@@ -2219,11 +2213,18 @@ public class PermissionBitFactoryImpl extends PermissionFactory {
      * table
      */
 
-    Try.run(() -> lockManager.tryLock(LOCK_PREFIX + permissionKey, () -> {
-      deleteInsertPermission(permissionable, type, finalNewReference);
-    })).onFailure(e -> {
-      throw new DotRuntimeException(e);
-    });
+	  HibernateUtil.addSyncCommitListener(new Runnable() {
+		  @Override
+		  public void run() {
+			  Try.run(() -> lockManager.tryLock(LOCK_PREFIX + permissionKey, () -> {
+
+				  deleteInsertPermission(permissionable, type, finalNewReference);
+
+			  })).onFailure(e -> {
+				  throw new DotRuntimeException(e);
+			  });
+		  }
+	  });
 
     return permissionList;
 
@@ -2346,6 +2347,7 @@ public class PermissionBitFactoryImpl extends PermissionFactory {
 		replacements.setAttribute(QueryReplacements.TABLE, PERMISSION_REFERENCE);
 		replacements.setAttribute(QueryReplacements.CONDITIONAL_COLUMN, ASSET_ID);
 		replacements.setAttribute(QueryReplacements.CONDITIONAL_VALUE, permissionId);
+
 		replacements.setAttribute(QueryReplacements.EXTRA_COLUMNS, new String[]{REFERENCE_ID, PERMISSION_TYPE});
 
 		if (DbConnectionFactory.isPostgres()) {
