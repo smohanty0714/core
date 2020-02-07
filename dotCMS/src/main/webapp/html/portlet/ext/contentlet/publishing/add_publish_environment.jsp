@@ -121,6 +121,7 @@
 
 		var filterStore = new dojo.store.Memory({
 			data: [
+				{name:"" , id:"" },
 				<%
                 final Map<String,FilterDescriptor> filterKeys = APILocator.getPublisherAPI().getFilterMap();
                 int i = 0;
