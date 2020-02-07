@@ -58,6 +58,7 @@ public class Environment implements Permissionable,Serializable{
 	private String id;
 	private String name;
 	private Boolean pushToAll;
+	private String filterFilename;
 
 	public String getId() {
 		return id;
@@ -77,6 +78,8 @@ public class Environment implements Permissionable,Serializable{
 	public void setPushToAll(Boolean pushToAll) {
 		this.pushToAll = pushToAll;
 	}
+	public String getFilterFilename(){ return this.filterFilename; }
+	public void setFilterFilename(final String filterFilename){ this.filterFilename = filterFilename; }
 
 
 	@Override

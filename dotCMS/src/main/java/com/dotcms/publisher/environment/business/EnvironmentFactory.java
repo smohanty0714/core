@@ -12,8 +12,8 @@ public abstract class EnvironmentFactory {
 
 	protected static String SELECT_ALL_ENVIRONMENTS = "SELECT * FROM publishing_environment order by name";
 	protected static String SELECT_ENVIRONMENTS_WITH_SERVERS = "SELECT * FROM publishing_environment pe where (select count(pep.id) from publishing_end_point pep where pep.group_id = pe.id) > 0 order by name";
-	protected static String INSERT_ENVIRONMENT = "INSERT INTO publishing_environment VALUES (?,?,?)";
-	protected static String UPDATE_ENVIRONMENT = "UPDATE publishing_environment SET name = ?, push_to_all = ? WHERE id = ?";
+	protected static String INSERT_ENVIRONMENT = "INSERT INTO publishing_environment VALUES (?,?,?,?)";
+	protected static String UPDATE_ENVIRONMENT = "UPDATE publishing_environment SET name = ?, push_to_all = ?, filter_filename = ? WHERE id = ?";
 	protected static String DELETE_ENVIRONMENT = "DELETE FROM publishing_environment WHERE id = ?";
 	protected static String SELECT_ENVIRONMENT_BY_ID = "SELECT * FROM publishing_environment WHERE id = ?";
 	protected static String SELECT_ENVIRONMENT_BY_NAME = "SELECT * FROM publishing_environment WHERE name = ?";

@@ -124,6 +124,7 @@ public class EnvironmentAjaxAction extends AjaxAction {
         	Environment environment = new Environment();
         	environment.setName(name);
         	environment.setPushToAll("pushToAll".equals(request.getParameter("pushType")));
+        	environment.setFilterFilename(request.getParameter("pushPublishFilterSelect"));
 
         	List<String> whoCanUse = Arrays.asList(whoCanUseTmp.split(","));
         	List<Permission> permissions = new ArrayList<Permission>();
@@ -177,6 +178,7 @@ public class EnvironmentAjaxAction extends AjaxAction {
 	        environment.setId(identifier);
         	environment.setName(name);
         	environment.setPushToAll("pushToAll".equals(request.getParameter("pushType")));
+			environment.setFilterFilename(request.getParameter("pushPublishFilterSelect"));
 
         	List<String> whoCanUse = Arrays.asList(whoCanUseTmp.split(","));
         	List<Permission> permissions = new ArrayList<Permission>();

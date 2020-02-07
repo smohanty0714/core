@@ -77,6 +77,7 @@ public class EnvironmentFactoryImpl extends EnvironmentFactory {
 		dc.addParam(environment.getId());
 		dc.addParam(environment.getName());
 		dc.addParam(environment.getPushToAll().booleanValue());
+		dc.addParam(environment.getFilterFilename());
 		dc.loadResult();
 
 	}
@@ -87,6 +88,7 @@ public class EnvironmentFactoryImpl extends EnvironmentFactory {
 		dc.setSQL(UPDATE_ENVIRONMENT);
 		dc.addParam(environment.getName());
 		dc.addParam(environment.getPushToAll().booleanValue());
+		dc.addParam(environment.getFilterFilename());
 		dc.addParam(environment.getId());
 		dc.loadResult();
 	}
