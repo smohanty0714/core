@@ -2207,7 +2207,8 @@ CREATE TABLE IF NOT EXISTS publishing_end_point (
 create table publishing_environment(
 	id varchar(36) NOT NULL  primary key,
 	name varchar(255) NOT NULL unique,
-	push_to_all bool NOT NULL
+	push_to_all bool NOT NULL,
+	filter_filename varchar(255)
 );
 
 create table sitesearch_audit (

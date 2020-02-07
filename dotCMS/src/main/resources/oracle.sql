@@ -2396,7 +2396,8 @@ CREATE TABLE publishing_end_point (
 create table publishing_environment(
 	id varchar2(36) NOT NULL  primary key,
 	name varchar2(255) NOT NULL unique,
-	push_to_all number(1,0) DEFAULT 0 NOT NULL
+	push_to_all number(1,0) DEFAULT 0 NOT NULL,
+	filter_filename varchar2(255)
 );
 
 create table sitesearch_audit (

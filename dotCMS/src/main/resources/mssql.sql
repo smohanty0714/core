@@ -2549,7 +2549,8 @@ CREATE TABLE publishing_end_point (
 create table publishing_environment(
     id NVARCHAR(36) NOT NULL  primary key,
     name NVARCHAR(255) NOT NULL unique,
-    push_to_all tinyint NOT NULL
+    push_to_all tinyint NOT NULL,
+    filter_filename NVARCHAR(255)
 );
 
 
