@@ -1,5 +1,9 @@
 package com.dotcms.publishing;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 public interface PublisherAPI {
 
     /**
@@ -38,5 +42,21 @@ public interface PublisherAPI {
      * @see com.dotcms.publisher.environment.bean.Environment
      */
     public PublishStatus publish ( PublisherConfig config, PublishStatus status ) throws DotPublishingException;
+
+    /**
+     * Adds a filter to the map of filters, using the filename as the key
+     * @param key
+     * @param filterDescriptor
+     */
+    void addFilter(final String key, final FilterDescriptor filterDescriptor);
+
+    /**
+     * Gets a Filter based on its key
+     * @param key filename of the filter
+     * @return FilterDescriptor
+     */
+    FilterDescriptor getFilterByKey(final String key);
+
+    Map<String,FilterDescriptor> getFilterMap();
 
 }
