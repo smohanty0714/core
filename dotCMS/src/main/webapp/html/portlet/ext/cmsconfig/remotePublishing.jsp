@@ -56,7 +56,7 @@ function goToEditEnvironment(identifier){
     var dialog = new dijit.Dialog({
         id: 'addEnvironment',
         title: "<%= LanguageUtil.get(pageContext, "publisher_Edit_Environment_Title")%>",
-        style: "width: 400px; height: 375px;",
+        style: "width: 382px; ",
         content: new dojox.layout.ContentPane({
             href: "/html/portlet/ext/contentlet/publishing/add_publish_environment.jsp?op=edit&id="+identifier+"&random="+y
         }),

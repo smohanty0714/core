@@ -1,11 +1,11 @@
 <%@ include file="/html/portlet/ext/contentlet/publishing/init.jsp" %>
-<%@page import="com.dotmarketing.cms.factories.PublicEncryptionFactory"%>
 <%@page import="com.dotmarketing.business.APILocator"%>
 <%@page import="com.dotcms.publisher.environment.business.EnvironmentAPI"%>
 <%@page import="com.dotcms.publisher.environment.bean.Environment"%>
 <%@ page import="com.liferay.portal.language.LanguageUtil"%>
 <%@page import="com.dotmarketing.business.Role"%>
 <%@page import="com.dotmarketing.business.PermissionAPI"%>
+<%@ page import="com.dotcms.publishing.FilterDescriptor" %>
 <%
 	String identifier = request.getParameter("id");
 	EnvironmentAPI eAPI = APILocator.getEnvironmentAPI();
@@ -119,6 +119,40 @@
 
 		<% }%>
 
+		var filterStore = new dojo.store.Memory({
+			data: [
+				<%
+                final Map<String,FilterDescriptor> filterKeys = APILocator.getPublisherAPI().getFilterMap();
+                int i = 0;
+                final int filterSize = filterKeys.size();
+                for(final Map.Entry<String,FilterDescriptor> filterDescriptorMap : filterKeys.entrySet()){
+                    i++;
+                      %>
+				{name:"<%=filterDescriptorMap.getValue().getTitle()%>" , id:"<%=filterDescriptorMap.getKey()%>" }
+				<%
+                if (i < filterSize){
+                   %>,<%
+				      }
+				   }
+                %>
+			]
+		});
+
+		var selectPushPublishFilter = new dijit.form.FilteringSelect({
+					id: "pushPublishFilterSelect",
+					name: "pushPublishFilterSelect",
+					store: filterStore,
+					pageSize:30,
+					searchDelay:300,
+					style: "width: 80%; margin-left: 5px;",
+					required:false,
+					onChange:function(item){
+						console.log("Filter: " + dijit.byId("pushPublishFilterSelect").getValue());
+					},
+					value : 0
+				},
+				"selectPushPublishFilter");
+
 
 	});
 
@@ -150,6 +184,12 @@
 					<input dojoType="dijit.form.RadioButton" type="radio" name="pushType" value="pushToAll"  checked="<%=currentEnvironment.getPushToAll()%>"  id="pushToAll" />
 					<label for="pushToAll"><%= LanguageUtil.get(pageContext, "publisher_Environments_Push_To_All") %></label>
 				</div>
+			</dd>
+		</dl>
+		<dl>
+			<dt><%=LanguageUtil.get(pageContext, "PushPublish-Filter")%>:</dt>
+			<dd>
+				<input id="selectPushPublishFilter"/>
 			</dd>
 		</dl>
 		<dl>
