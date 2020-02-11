@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PublisherAPIImpl implements PublisherAPI {
@@ -159,6 +159,11 @@ public class PublisherAPIImpl implements PublisherAPI {
     @Override
     public Map<String, FilterDescriptor> getFilterMap() {
         return this.loadedFilters;
+    }
+
+    @Override
+    public Optional<FilterDescriptor> findDefaultFilter() {
+        return this.loadedFilters.values().stream().filter(FilterDescriptor::isDefaultFilter).sorted().findFirst();
     }
 
 

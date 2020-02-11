@@ -2,6 +2,7 @@ package com.dotcms.publishing;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public interface PublisherAPI {
@@ -59,4 +60,5 @@ public interface PublisherAPI {
 
     Map<String,FilterDescriptor> getFilterMap();
 
+    Optional<FilterDescriptor> findDefaultFilter();
 }

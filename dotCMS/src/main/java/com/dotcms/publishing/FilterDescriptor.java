@@ -24,6 +24,7 @@ public class FilterDescriptor {
 
     private final String key;
     private final String title;
+    private final boolean defaultFilter;
     private final Map<String,Object> filters;
 
     /**
@@ -37,10 +38,12 @@ public class FilterDescriptor {
     @JsonCreator
     public FilterDescriptor(@JsonProperty("key")final String key,
             @JsonProperty("title")final String title,
-            @JsonProperty("filters")final Map<String, Object> filters) {
+            @JsonProperty("filters")final Map<String, Object> filters,
+            @JsonProperty("default") final boolean defaultFilter) {
         this.key = key;
         this.title = title;
         this.filters = filters;
+        this.defaultFilter = defaultFilter;
     }
 
     public String getKey() {
@@ -55,11 +58,14 @@ public class FilterDescriptor {
         return filters;
     }
 
+    public boolean isDefaultFilter(){return defaultFilter;}
+
     @Override
     public String toString() {
         return "FilterDescriptor{" +
                 "key=" + this.key +
                 ", title=" + this.title +
+                ", default=" + this.defaultFilter +
                 ", filters{" + this.filters + "}" +
                 '}';
     }
