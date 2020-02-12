@@ -782,6 +782,71 @@ function addToWhoCanUse(myId, myName) {
     this.whoCanUse[this.whoCanUse.length] = entry;
 }
 
+// functions of the push publish filters
+var ppFilters = new Array();
+
+function addSelectedToPPFilters() {
+    var select = dijit.byId("pushPublishFilterSelect");
+    var filename = select.getValue();
+    var title = select.attr('displayedValue');
+
+    addToPPFilters(filename, title);
+    refreshPPFiltersTable();
+}
+
+function addToPPFilters(filename, title) {
+    //Checks if the item is not already in the array
+    for (i = 0; i < this.ppFilters.length; i++) {
+        if(filename == this.ppFilters[i].id){
+            return;
+        }
+    }
+
+    var entry = {name: title, id: filename };
+    this.ppFilters.push(entry);
+}
+
+function refreshPPFiltersTable() {
+    dojo.empty("ppFiltersTbl");
+    var table = dojo.byId("ppFiltersTbl");
+    var values = "";
+
+    this.ppFilters = this.ppFilters.sort(function (a, b) {
+        var x = a.name.toLowerCase();
+        var y = b.name.toLowerCase();
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
+    for (i = 0; i < this.ppFilters.length; i++) {
+        values = values + this.ppFilters[i].id;
+        if(i<this.ppFilters.length-1){
+            values = values + ",";
+        }
+        var tr = dojo.create("tr", null, table);
+        dojo.create("td", { width: 10, innerHTML: "<span class='deleteIcon'></span>", className: "wfXBox", onClick: "removeFromPPFilters('" + this.ppFilters[i].id + "');refreshPPFiltersTable()" }, tr);
+        dojo.create("td", { innerHTML: this.ppFilters[i].name}, tr);
+
+    }
+    dojo.byId('ppFilters').value = values;
+}
+
+function removeFromPPFilters(myId) {
+
+    var x = 0;
+    var newPPFilter = new Array();
+    for (i = 0; i < this.ppFilters.length; i++) {
+        if (myId != this.ppFilters[i].id) {
+            newPPFilter[x] = this.ppFilters[i];
+            x++;
+        }
+    }
+    this.ppFilters = newPPFilter;
+
+    var select = dijit.byId("pushPublishFilterSelect");
+    select.set('value', '0');
+    select.set("displayedValue","");
+}
+//end of the functions of the push publish filters
+
 function backToEnvironmentList(addedEndPoint) {
 
     if (!addedEndPoint) {

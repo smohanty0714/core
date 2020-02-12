@@ -89,6 +89,7 @@ public class PublisherUtil {
 		e.setId(row.get("id").toString());
 		e.setName(row.get("name").toString());
 		e.setPushToAll(DbConnectionFactory.isDBTrue(row.get("push_to_all").toString()));
+		e.setFilterFilename(UtilMethods.isSet(row.get("filter_filename")) ? row.get("filter_filename").toString() : "");
 		return e;
 	}
 

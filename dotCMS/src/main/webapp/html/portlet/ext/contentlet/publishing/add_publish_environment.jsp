@@ -119,6 +119,8 @@
 
 		<% }%>
 
+		//PushPublishFilters Functions
+
 		var filterStore = new dojo.store.Memory({
 			data: [
 				{name:"" , id:"" },
@@ -145,14 +147,32 @@
 					store: filterStore,
 					pageSize:30,
 					searchDelay:300,
-					style: "width: 80%; margin-left: 5px;",
+					maxHeight:400,
+					width:200,
 					required:false,
-					onChange:function(item){
-						console.log("Filter: " + dijit.byId("pushPublishFilterSelect").getValue());
+					onClick:function(){
+						dijit.byId("pushPublishFilterSelect").set("displayedValue","");
+						dijit.byId("pushPublishFilterSelect").loadDropDown();
 					},
 					value : 0
 				},
 				"selectPushPublishFilter");
+
+		selectPushPublishFilter.watch('displayedValue', function(property, oldValue, newValue) {
+			if (newValue && dijit.byId("pushPublishFilterSelect").isValid()) {
+				addSelectedToPPFilters();
+			}
+		});
+
+		<% if(currentEnvironment.getFilterFilename()!=null) {
+			final List<String> filtersFilename = Arrays.asList(currentEnvironment.getFilterFilename().split(","));%>
+			<%for(final String filterFilename :  filtersFilename){%>
+				addToPPFilters("<%=filterFilename%>", "<%=APILocator.getPublisherAPI().getFilterByKey(filterFilename).getTitle()%>");
+			<% }%>
+			refreshPPFiltersTable();
+		<% }%>
+
+		//End PushPublishFilters Functions
 
 
 	});
@@ -191,6 +211,10 @@
 			<dt><%=LanguageUtil.get(pageContext, "PushPublish-Filter")%>:</dt>
 			<dd>
 				<input id="selectPushPublishFilter"/>
+				<div class="who-can-use">
+					<table class="who-can-use__list" id="ppFiltersTbl" style="overflow-y: scroll;display: block;overflow: auto;"></table>
+				</div>
+				<input type="hidden" name="ppFilters" id="ppFilters">
 			</dd>
 		</dl>
 		<dl>
