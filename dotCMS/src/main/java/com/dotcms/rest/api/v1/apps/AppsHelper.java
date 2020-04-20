@@ -194,6 +194,8 @@ class AppsHelper {
 
             final AppSecrets appSecrets = optionalAppSecrets.orElseGet(AppSecrets::empty);
 
+            appsAPI.checkIntegrity(appSecrets, appDescriptor);
+
             final  Map<String,SecretView> mappedSecrets = appSecrets.getSecrets().entrySet()
                     .stream()
                     .map(e -> new SecretView(e.getKey(), e.getValue(), descriptorParams.get(e.getKey())))

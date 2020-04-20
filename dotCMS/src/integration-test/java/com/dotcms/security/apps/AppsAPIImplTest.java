@@ -19,6 +19,7 @@ import com.dotcms.datagen.UserDataGen;
 import com.dotcms.util.IntegrationTestInitService;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
+import com.dotmarketing.business.DotValidationException;
 import com.dotmarketing.business.Layout;
 import com.dotmarketing.business.LayoutAPI;
 import com.dotmarketing.business.Role;
@@ -437,7 +438,7 @@ public class AppsAPIImplTest {
     }
 
 
-    @Test
+    @Test(expected = DotValidationException.class)
     public void Test_Secret_Integrity_Check_Expect_ValidationException() {
         final AppsAPI api = APILocator.getAppsAPI();
 

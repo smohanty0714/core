@@ -467,7 +467,7 @@ public class AppsAPIImpl implements AppsAPI {
 
         if (!appDescriptor.isAllowExtraParameters() && hasDynamic(appSecrets, appDescriptor)) {
             errors.add(String.format(
-                    "Descriptor `%s` indicates that no extra params are allowed. However this secret has extra properties that are not in the formal list of params. ",
+                    "Descriptor `%s` indicates that no extra params are allowed. However this secret has extra properties that are not in the formal list of params in the yml descriptor. ",
                     appDescriptor.getName()));
         }
 
