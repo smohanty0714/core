@@ -1,6 +1,7 @@
 package com.dotcms.security.apps;
 
 import com.dotmarketing.beans.Host;
+import com.dotmarketing.business.DotValidationException;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
 import com.dotmarketing.util.Config;
@@ -118,7 +119,7 @@ public interface AppsAPI {
             throws DotDataException, DotSecurityException;
 
     /**
-     *
+     * finder method
      * @param key
      * @param user
      * @return
@@ -129,7 +130,7 @@ public interface AppsAPI {
             throws DotDataException, DotSecurityException;
 
     /**
-     *
+     * secret creator
      * @param inputStream
      * @param user
      * @throws IOException
@@ -141,7 +142,7 @@ public interface AppsAPI {
             User user) throws IOException, DotDataException, DotSecurityException;
 
     /**
-     *
+     * secret remover
      * @param key
      * @param user
      * @param removeDescriptor
@@ -151,6 +152,33 @@ public interface AppsAPI {
     void removeApp(final String key, final User user,
             final boolean removeDescriptor)
             throws DotSecurityException, DotDataException;
+
+    /**
+     * Once a secret has loaded we can check any integrity issue against the AppDescriptor
+     * @param appSecrets
+     * @param appDescriptor
+     * @return
+     * @throws DotValidationException
+     */
+    boolean checkIntegrity(final AppSecrets appSecrets, final AppDescriptor appDescriptor) throws DotValidationException;
+
+    /**
+     * Once a secret has loaded we can
+     * @param appSecrets
+     * @param appDescriptor
+     * @return
+     */
+    List<Tuple2<String, Secret>> getDynamic(final AppSecrets appSecrets,
+            final AppDescriptor appDescriptor);
+
+    /**
+     *
+     * @param appSecrets
+     * @param appDescriptor
+     * @return
+     */
+    boolean hasDynamic(final AppSecrets appSecrets,
+            final AppDescriptor appDescriptor);
 
     enum INSTANCE {
         INSTANCE;

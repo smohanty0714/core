@@ -6,6 +6,7 @@ import static com.dotcms.security.apps.AppsUtil.toJsonAsChars;
 import com.dotmarketing.beans.Host;
 import com.dotmarketing.business.APILocator;
 import com.dotmarketing.business.CacheLocator;
+import com.dotmarketing.business.DotValidationException;
 import com.dotmarketing.business.LayoutAPI;
 import com.dotmarketing.business.UserAPI;
 import com.dotmarketing.exception.DoesNotExistException;
@@ -23,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.liferay.portal.model.User;
 import com.liferay.util.StringPool;
+import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +33,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -474,6 +477,76 @@ public class AppsAPIImpl implements AppsAPI {
         } catch (IOException e) {
             throw new DotDataException(e);
         }
+    }
+
+    /**
+     *
+     * @param appSecrets
+     * @param appDescriptor
+     * @throws DotValidationException
+     */
+    public boolean checkIntegrity(final AppSecrets appSecrets, final AppDescriptor appDescriptor)
+            throws DotValidationException {
+
+        final List<String> errors = new ArrayList<>();
+
+        if (!appDescriptor.isAllowExtraParameters() && hasDynamic(appSecrets, appDescriptor)) {
+            errors.add(String.format(
+                    "Descriptor `%s` indicates that no extra params are allowed. However this secret has extra properties that are not in the formal list of params. ",
+                    appDescriptor.getName()));
+        }
+
+        for (final Entry<String, ParamDescriptor> entry : appDescriptor.getParams().entrySet()) {
+            final String paramName = entry.getKey();
+            final ParamDescriptor descriptor = entry.getValue();
+            final Secret secret = appSecrets.getSecrets().get(paramName);
+            if (descriptor.isRequired() && (null == secret || UtilMethods
+                    .isNotSet(secret.getValue()))) {
+                errors.add(String.format(
+                        "Descriptor `%s` indicates that param `%s` is mandatory. However this secret shows the value is missing. ",
+                        appDescriptor.getName(), paramName));
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            final String errorsAsString = String.join(" \n", errors);
+            throw new DotValidationException(errorsAsString);
+        }
+
+        return true;
+    }
+
+    /**
+     *
+     * @param appSecrets
+     * @param appDescriptor
+     * @return
+     */
+    public List<Tuple2<String, Secret>> getDynamic(final AppSecrets appSecrets,
+            final AppDescriptor appDescriptor) {
+        final Map<String, Secret> secrets = appSecrets.getSecrets();
+        if (null != secrets) {
+            final Map<String, ParamDescriptor> descriptorParams = appDescriptor.getParams();
+            return secrets.entrySet().stream().filter(e -> !descriptorParams.containsKey(e.getKey()))
+                    .map(e -> Tuple.of(e.getKey(), e.getValue())).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     *
+     * @param appSecrets
+     * @param appDescriptor
+     * @return
+     */
+    public boolean hasDynamic(final AppSecrets appSecrets,
+            final AppDescriptor appDescriptor) {
+        final Map<String, Secret> secrets = appSecrets.getSecrets();
+        if (null != secrets) {
+            final Map<String, ParamDescriptor> descriptorParams = appDescriptor.getParams();
+            return secrets.entrySet().stream().anyMatch(e -> !descriptorParams.containsKey(e.getKey()));
+        }
+        return false;
     }
 
     private synchronized void invalidateCache(){

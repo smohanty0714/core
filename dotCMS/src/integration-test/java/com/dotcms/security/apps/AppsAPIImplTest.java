@@ -1,9 +1,13 @@
 package com.dotcms.security.apps;
 
+import static com.dotcms.security.apps.ParamDescriptor.*;
+import static com.dotcms.security.apps.Secret.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.dotcms.datagen.LayoutDataGen;
 import com.dotcms.datagen.PortletDataGen;
@@ -20,6 +24,7 @@ import com.dotmarketing.business.Role;
 import com.dotmarketing.business.portal.PortletAPI;
 import com.dotmarketing.exception.DotDataException;
 import com.dotmarketing.exception.DotSecurityException;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.model.User;
@@ -262,7 +267,7 @@ public class AppsAPIImplTest {
 
         //Now we want to update one of the values within the secret.
         //We want to change the value from `secret3` to `secret-3` for the secret named "test:secret3"
-        final Secret secret = Secret.newSecret("secret-3".toCharArray(), Type.STRING, false);
+        final Secret secret = newSecret("secret-3".toCharArray(), Type.STRING, false);
         //Update the individual secret
         api.saveSecret("appKey-1-Host-1", Tuple.of("test:secret3",secret), host, admin);
         //The other properties of the object should remind the same so lets verify so.
@@ -329,7 +334,7 @@ public class AppsAPIImplTest {
         assertEquals("secret-4", recoveredBean1.getSecrets().get("test:secret4").getString());
 
         //Now lets re-introduce again the property we just deleted
-        final Secret secret = Secret.newSecret("lol".toCharArray(), Type.STRING, false);
+        final Secret secret = newSecret("lol".toCharArray(), Type.STRING, false);
 
         //This should create again the entry we just removed.
         api.saveSecret("appKeyHost-1", Tuple.of("test:secret3",secret), host, admin);
@@ -416,6 +421,33 @@ public class AppsAPIImplTest {
                  assertEquals(chr,(char)0);
             }
         }
+    }
+
+    @Test
+    public void Test_Secret_Integrity_Check_Expect_ValidationException() {
+        final AppsAPI api = APILocator.getAppsAPI();
+
+        final AppDescriptor descriptor = mock(AppDescriptor.class);
+        when(descriptor.isAllowExtraParameters()).thenReturn(false);
+        final Map<String, ParamDescriptor> params = ImmutableMap
+                .of(
+                        "requiredWithValue", newParam(null, false, Type.STRING, "any", "hint", true),
+                        "requiredNoValue", newParam(null, false, Type.STRING, "any", "hint", true),
+                        "nonRequired", newParam(null, false, Type.STRING, "any", "hint", false)
+                );
+        when(descriptor.getParams()).thenReturn(params);
+        when(descriptor.getName()).thenReturn("any-name");
+        final Map<String, Secret> secrets = ImmutableMap.of(
+                "requiredWithValue", newSecret(null, Type.STRING, false),
+                "requiredNoValue", newSecret(null, Type.STRING, false),
+                "nonRequired", newSecret(null, Type.STRING, false),
+                "dynamic1", newSecret(null, Type.STRING, false)
+        );
+
+        final AppSecrets appSecrets = mock(AppSecrets.class);
+        when(appSecrets.getKey()).thenReturn("any-key");
+        when(appSecrets.getSecrets()).thenReturn(secrets);
+        api.checkIntegrity(appSecrets, descriptor);
     }
 
     private Portlet getOrCreateServiceIntegrationPortlet(){

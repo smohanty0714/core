@@ -224,6 +224,7 @@ class AppsHelper {
         return Optional.empty();
     }
 
+
     /**
      * This will remove all the secrets under an app for a given host.
      * @param key unique app id for the given host.
