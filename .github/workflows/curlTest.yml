@@ -10,8 +10,8 @@ jobs:
         uses: actions/checkout@v2
       - name: Run script builds
         run: |
-        echo Hello Vico
-        #ls -las $HOME
+          echo Hello Vico
+          #ls -las $HOME
 #      - name: Checkout enterprise
 #        uses: actions/checkout@v1
 #        with:
