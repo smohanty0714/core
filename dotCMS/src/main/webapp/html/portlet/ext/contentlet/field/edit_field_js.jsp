@@ -670,8 +670,10 @@ var cmsfile=null;
         console.log("pattern:" + pattern + " = " + replaceUrlPattern(pattern, file));
 	    */
 	    
-	    
-		tinyMCEFilePickerCallback(assetURI, {alt: file.description});
+	    debugger;
+		// tinymce.activeEditor.setContent(`<img src="${assetURI}" alt="${file.description ? file.description : ''}" />`, {format: 'html'});
+
+		 tinyMCEFilePickerCallback(assetURI, {alt: file.description});
 	}
 	
 	
