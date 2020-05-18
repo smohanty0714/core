@@ -23,8 +23,6 @@ jobs:
           PROJECT_ID: cicd-246518
       - name: curl-test-image-build
         run: |
-          node --version
-          npm --version
           export CURRENT_BRANCH=$(basename $GITHUB_REF)
           docker build -t gcr.io/$PROJECT_ID/curl-tests-image:$GITHUB_RUN_NUMBER \
             --build-arg BUILD_FROM=COMMIT \

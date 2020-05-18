@@ -7,8 +7,8 @@ RUN echo "from image: $FROM_IMAGE"
 WORKDIR /srv
 
 # Installs node, npm and newman
-#RUN apk add --update nodejs
-#RUN apk add --update npm
+RUN apk add --update nodejs
+RUN apk add --update npm
 RUN npm install -g newman
 RUN npm install -g newman-reporter-htmlextra
 
