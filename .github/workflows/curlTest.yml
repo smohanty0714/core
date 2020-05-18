@@ -15,8 +15,8 @@ jobs:
           echo "$GITHUB_REF - $GITHUB_RUN_NUMBER - $GITHUB_SHA: $GITHUB_WORKSPACE"
           ls -las $GITHUB_WORKSPACE
 #          docker -t gcr.io/$PROJECT_ID/integration-tests-image:$GITHUB_RUN_NUMBER --build-arg BUILD_FROM=COMMIT --build-arg BUILD_ID=$GITHUB_REF --build-arg BUILD_HASH=$COMMIT_SHA --build-arg LICENSE_KEY=123 ./docker/tests/integration/
-      env:
-        PROJECT_ID: cicd-246518
+        env:
+          PROJECT_ID: cicd-246518
 #      - name: Checkout enterprise
 #        uses: actions/checkout@v1
 #        with:
