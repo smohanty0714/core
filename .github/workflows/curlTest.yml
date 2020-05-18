@@ -14,7 +14,7 @@ jobs:
         run: |
           echo $GITHUB_SHA -> $GITHUB_WORKSPACE
           ls -las $GITHUB_WORKSPACE
-          docker --version
+#          docker --version
 #      - name: Checkout enterprise
 #        uses: actions/checkout@v1
 #        with:
