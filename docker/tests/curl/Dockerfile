@@ -11,7 +11,8 @@ RUN apk add --update nodejs
 RUN apk add --update npm
 RUN node --version
 RUN npm --version
-RUN npm install -g newman && npm install -g newman-reporter-htmlextra
+RUN npm install -g newman
+RUN npm install -g newman-reporter-htmlextra
 
 COPY setup/build-src/curlTests.sh /build/curlTests.sh
 RUN chmod 500 /build/curlTests.sh
