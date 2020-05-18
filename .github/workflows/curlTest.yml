@@ -13,7 +13,7 @@ jobs:
       - name: Image build
         run: |
           echo "$GITHUB_REF - $GITHUB_RUN_NUMBER - $GITHUB_SHA: $GITHUB_WORKSPACE"
-          ecjp "docker build -t gcr.io/$PROJECT_ID/integration-tests-image:$GITHUB_RUN_NUMBER --build-arg BUILD_FROM=COMMIT --build-arg BUILD_ID=$GITHUB_REF --build-arg BUILD_HASH=$COMMIT_SHA --build-arg LICENSE_KEY=123 ./docker/tests/integration/"
+          echo "docker build -t gcr.io/$PROJECT_ID/integration-tests-image:$GITHUB_RUN_NUMBER --build-arg BUILD_FROM=COMMIT --build-arg BUILD_ID=$GITHUB_REF --build-arg BUILD_HASH=$COMMIT_SHA --build-arg LICENSE_KEY=123 ./docker/tests/integration/"
           docker build -t gcr.io/$PROJECT_ID/integration-tests-image:$GITHUB_RUN_NUMBER --build-arg BUILD_FROM=COMMIT --build-arg BUILD_ID=$GITHUB_REF --build-arg BUILD_HASH=$COMMIT_SHA --build-arg LICENSE_KEY=123 ./docker/tests/integration/
         env:
           PROJECT_ID: cicd-246518
