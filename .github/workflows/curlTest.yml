@@ -7,14 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout core
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - run: |
-        echo ${{ GITHUB_WORKSPACE }}
-        ls -las ${{ GITHUB_WORKSPACE }}
-      - name: Checkout enterprise
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-          repository: https://github.com/dotCMS/core.git
-          ref: release-5.2.2
-          token: ${{ secrets.GITHUB_ENTERPRISE_TOKEN }}
+        echo $HOME $GITHUB_WORKSPACE
+        #ls -las $HOME
+#      - name: Checkout enterprise
+#        uses: actions/checkout@v1
+#        with:
+#          fetch-depth: 1
+#          repository: https://github.com/dotCMS/core.git
+#          ref: release-5.2.2
+#          token: ${{ secrets.GITHUB_ENTERPRISE_TOKEN }}
