@@ -11,8 +11,6 @@ jobs:
         with:
           fetch-depth: 1
       - name: Image build
-        env:
-          GITHUB_SHA: $GITHUB_SHA
         run: |
           echo $GITHUB_SHA -> $GITHUB_WORKSPACE
           ls -las $GITHUB_WORKSPACE
