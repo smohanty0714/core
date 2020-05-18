@@ -11,9 +11,12 @@ jobs:
         with:
           fetch-depth: 1
       - name: Image build
+        env:
+          GITHUB_SHA: $GITHUB_SHA
         run: |
-          echo $GITHUB_WORKSPACE
+          echo $GITHUB_SHA -> $GITHUB_WORKSPACE
           ls -las $GITHUB_WORKSPACE
+          docker --version
 #      - name: Checkout enterprise
 #        uses: actions/checkout@v1
 #        with:
