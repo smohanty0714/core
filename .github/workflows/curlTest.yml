@@ -8,10 +8,12 @@ jobs:
     steps:
       - name: Checkout core
         uses: actions/checkout@v2
-      - name: Run script builds
+        with:
+          fetch-depth: 1
+      - name: Image build
         run: |
           echo $GITHUB_WORKSPACE
-          ls -las GITHUB_WORKSPACE
+          ls -las $GITHUB_WORKSPACE
 #      - name: Checkout enterprise
 #        uses: actions/checkout@v1
 #        with:
