@@ -9,6 +9,8 @@ WORKDIR /srv
 # Installs node, npm and newman
 RUN apk add --update nodejs
 RUN apk add --update npm
+RUN node --version
+RUN npm --version
 RUN npm install -g newman
 RUN npm install -g newman-reporter-htmlextra
 
